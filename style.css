@@ -1,0 +1,36 @@
+body {
+    background-color: darkslategray;
+    color: white;
+    font-family: arial, century gothic, sans-serif;
+    margin: 0;
+}
+
+.two-columns {
+    width: 100%;
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.two-rows {
+    display: grid;
+    grid-template-rows: 1fr 1fr;
+}
+
+.top-side {
+    display: block;
+    /* background-color: green; */
+}
+
+.bottom-side {
+    font-size: 40pt;
+}
+
+.right-side {
+    height: 100%;
+    /* background-color: red; */
+}
+
+ruby {
+    ruby-position: under;
+}
