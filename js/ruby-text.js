@@ -12,7 +12,7 @@ export let pinyinKeys
 let zhuyinDict
 
 export function getZhChars() {
-    fetch('../data/py_trad_monochars.json')
+    fetch('./data/py_trad_monochars.json')
     .then(res => {
         if (res.ok) {
             console.log('Fetched chars to Pinyin')
@@ -28,7 +28,7 @@ export function getZhChars() {
 }
 
 export function getPinZhuDict() {
-    fetch('../data/pin_to_zhu.json')
+    fetch('./data/pin_to_zhu.json')
     .then(res => {
         if (res.ok) {
             console.log('Fetched Pin to Zhu')
