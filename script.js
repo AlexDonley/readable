@@ -1,8 +1,23 @@
-const userText = document.getElementById('userText')
-const pinPos = document.getElementById('pinPos')
-const zhuPos = document.getElementById('zhuPos')
-const pinyinBlock = document.getElementById('pinyinBlock')
-const zhuyinBlock = document.getElementById('zhuyinBlock')
+import { 
+    pinyinKeys,
+    splitPinyin, addPinTone, 
+    constructPinRT, constructZhuRT,
+    createHorRT 
+} from './js/ruby-text.js'
+import { 
+    genWPStrToArr 
+} from './js/word-process.js'
+import { wordToZhu } from './js/eng-to-zhu.js'
+
+const defaultChinese = "道可道，非常道。名可名，非常名。";
+const defaultEnglish = "Sing cheese documentation."
+
+const userText      = document.getElementById('userText')
+const langSel       = document.querySelector('#langSel')
+const pinPos        = document.querySelector('#pinPos')
+const zhuPos        = document.querySelector('#zhuPos')
+const pinyinBlock   = document.querySelector('#pinyinBlock')
+const zhuyinBlock   = document.querySelector('#zhuyinBlock')
 
 const umlaut = 'u' + '\u0308'
 const vowelHierarchy = ['a', 'o', 'e', 'i', 'u', 'v']
@@ -19,188 +34,84 @@ const pinyinCons = [
     'z', 'c', 's', 'r'
 ]
 
-function changeRubyPos(pinOrZhu, str) {
-    
-    if (pinOrZhu == "pinyin") {
-        rubyElements = Array.from(document.getElementsByClassName('pin-wrap'))
-    } else if (pinOrZhu == "zhuyin") {
-        rubyElements = Array.from(document.getElementsByClassName('zhu-wrap'))
+langSel.addEventListener('change', swapLang());
+
+function swapLang() {
+    return function executeOnEvent(e) {
+        const newLang = e.target.value;
+        console.log(newLang)
+
+        if (newLang == 'chinese') {
+            userText.value = defaultChinese
+        } else if (newLang == 'english') {
+            userText.value = defaultEnglish
+        }
     }
-
-    rubyElements.forEach(element => {
-        if (element.classList.length > 1) {
-            element.classList.remove(element.classList[1])
-        }
-        element.classList.add("ruby-" + str)
-    })
 }
 
-let pinyinKeys
-let zhuyinDict
+pinPos.addEventListener('change', changeRubyPos('pinyin'));
+zhuPos.addEventListener('change', changeRubyPos('zhuyin'));
 
-function getZhChars() {
-    fetch('./data/mono_chars2.json')
-    .then(res => {
-        if (res.ok) {
-            console.log('Successfully fetched pinyin keys.')
-        } else {
-            console.log('Failed to fetch pinyin keys.')
+function changeRubyPos(pinOrZhu) {
+    
+    return function executeOnEvent(e) {
+                
+        let rubyElements = []
+        let str = e.target.value
+        
+        if (pinOrZhu == "pinyin") {
+            rubyElements = Array.from(document.getElementsByClassName('pin-wrap'));
+        } else if (pinOrZhu == "zhuyin") {
+            rubyElements = Array.from(document.getElementsByClassName('zhu-wrap'));
         }
-        return res.json()
-    })
-    .then(data => {
-        pinyinKeys = data;
-        updateBlocks(userText.value)
-    })
-    .catch(error => console.log(error))
+    
+        console.log(pinOrZhu, str)
+
+        rubyElements.forEach(element => {
+            if (element.classList.length > 1) {
+                element.classList.remove(element.classList[1])
+            }
+            element.classList.add("ruby-" + str)
+        })
+    }
 }
 
-function getPinZhuDict() {
-    fetch('./data/pin_to_zhu_2.json')
-    .then(res => {
-        if (res.ok) {
-            console.log('Successfully fetched zhuyin dict.')
-        } else {
-            console.log('Failed to fetch zhuyin dict.')
-        }
-        return res.json()
-    })
-    .then(data => {
-        zhuyinDict = data;
-    })
-    .catch(error => console.log(error))
-}
+userText.addEventListener('keyup', updateBlocks)
 
-getPinZhuDict()
-getZhChars()
-
-function updateBlocks(str) {
-    charArr = str.split('')
+function updateBlocks() {
+    const str = userText.value;
     pinyinBlock.innerHTML = ''
     zhuyinBlock.innerHTML = ''
     
-    charArr.forEach(char => {
+    if (langSel.value == 'chinese') {
+        const charArr = str.split('')
 
-        newRuby = document.createElement('ruby')
-        newRuby.classList.add('pin-wrap')
+        
+        charArr.forEach(char => {
 
-        charIndex = pinyinKeys.findIndex(({ trad }) => trad === char)
-        if (charIndex >= 0) {
-            pinRT = document.createElement('rt')
-            pinRT.classList.add('pin-text')
-            pinRT.innerText = insertPYDiacritic(pinyinKeys[charIndex].pin1[0])
-
-            newRuby.append(char)
-            newRuby.append(pinRT)
-
-            pinyinBlock.append(newRuby)
-            zhuyinBlock.append(constructZhuyinRT(char, pinyinKeys[charIndex].pin1[0]))
-        } else {
-            pinyinBlock.append(char)
-            zhuyinBlock.append(char)
-        }
-    })
-}
-
-function insertPYDiacritic(str) {
-    letterStr = str.substring(0, str.length - 1)
-    toneNum = str.substring(str.length - 1)
-    thisDiacritic = null
-    newStr = letterStr
+            const charIndex = pinyinKeys.findIndex(({ trad }) => trad === char)
+            if (charIndex >= 0) {
+                
+                const newPYRT = constructPinRT(char);
+                const newZYRT = constructZhuRT(char);
     
-    if (toneNum < 5) {
-        thisDiacritic = pinyinDiacritics[toneNum - 1]
+                pinyinBlock.append(newPYRT);
+                zhuyinBlock.append(newZYRT);
+            } else {
+                pinyinBlock.append(char)
+                zhuyinBlock.append(char)
+            }
+        })
+    } else if (langSel.value == 'english') {
 
-        letterArr = letterStr.split('')
+        const wordArr = genWPStrToArr(str);
 
-        let i = 0
+        wordArr.forEach(word => {
+            const capText = wordToZhu(word);
+            const newElem = createHorRT(word, capText);
 
-        while (!(letterArr.includes(vowelHierarchy[i]))){
-            i++
-        }
-
-        diaIndex = letterArr.indexOf(vowelHierarchy[i]) + 1
-
-        if (letterArr.includes('v')) {
-            newStr = str.slice(0, diaIndex - 1) 
-                    + umlaut 
-                    + thisDiacritic 
-                    + str.slice(diaIndex, str.length - 1)
-        } else {
-            newStr = str.slice(0, diaIndex) 
-                    + thisDiacritic 
-                    + str.slice(diaIndex, str.length - 1)
-        }
+            pinyinBlock.append(newElem);
+            pinyinBlock.append(" ")
+        })
     }
-
-    return newStr
-}
-
-function pinToZhu(syll) {
-    let divideIndex = 0
-    let zhuOnset = ''
-    let zhuCoda = ''
-
-    if (syll.substring(1, 2) == 'h') {
-        divideIndex = 2
-    } else if (pinyinCons.includes(syll.substring(0, 1))) {
-        divideIndex = 1
-    }
-
-    pinOnset = syll.slice(0, divideIndex)
-    pinCoda = syll.slice(divideIndex)
-
-    if (pinOnset.length > 0) {
-        zhuOnset = zhuyinDict[0][pinOnset]
-    }
-
-    if (['u', 'un', 'uan'].includes(pinCoda)) {
-        if (['j', 'q', 'x'].includes(pinOnset)) {
-            zhuCoda = zhuyinDict[1][pinCoda][1]
-        } else {
-            zhuCoda = zhuyinDict[1][pinCoda][0]
-        }
-    } else {
-        zhuCoda = zhuyinDict[1][pinCoda]
-    }
-
-    fullZhuyin = zhuOnset + zhuCoda
-
-    return fullZhuyin
-}
-
-function constructZhuyinRT(char, str) {
-    letterStr = str.substring(0, str.length - 1)
-    toneNum = str.substring(str.length - 1)
-
-    newRuby = document.createElement('ruby')
-    miniRuby = document.createElement('ruby')
-    zhuRT = document.createElement('rt')
-    toneRT = document.createElement('rt')
-
-    newRuby.classList.add('zhu-wrap')
-    zhuRT.classList.add('zhu-text')
-    toneRT.classList.add('tone-text')
-
-    zhuRT.innerText = pinToZhu(letterStr)
-
-    if (toneNum > 1) {
-        zhuDia = zhuyinDiacritics[toneNum - 2]
-
-        if (toneNum == 5) {
-            zhuRT.innerText = zhuDia + zhuRT.innerText
-        } else {
-            toneRT.innerText = zhuDia
-
-            miniRuby.append(toneRT)
-        }
-    }
-
-    miniRuby.append(char)
-    miniRuby.append(zhuRT)
-
-    newRuby.append(miniRuby)
-    newRuby.append(toneRT)
-
-    return newRuby
 }
