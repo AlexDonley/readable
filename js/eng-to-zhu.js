@@ -17,7 +17,7 @@ const vowCheck = ['ʌ', 'ɛ', 'i', 'ɪ', 'ɔ']
 fetchEngIPA()
 
 function fetchEngIPA() {
-    fetch("../data/syll_IPA.json")
+    fetch("./data/syll_IPA.json")
     .then(res => res.json())
     .then(data => {
         console.log('Successfully fetched English IPA syllables.');
@@ -27,7 +27,7 @@ function fetchEngIPA() {
 }
 
 function fetchIPAtoZhu() {
-    fetch("../data/ipa_to_zhu.json")
+    fetch("./data/ipa_to_zhu.json")
     .then(res => res.json())
     .then(data => {
         console.log('Successfully fetched IPA to zhuyin dict.');
