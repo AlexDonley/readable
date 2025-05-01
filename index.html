@@ -19,7 +19,7 @@
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script> -->
     <link rel="stylesheet" href="style.css">
-    <script src="script.js" defer></script>
+    <script type="module" src="script.js" defer></script>
     <link rel="icon" href="favicon.ico" type="image/x-icon">
     <title>Readable</title>
 </head>
@@ -31,8 +31,12 @@
         </div>
 
         <div class="user-input">
-            Enter Chinese below:
-            <textarea class="user-text" id="userText" onkeyup="updateBlocks(userText.value)">道可道，非常道。名可名，非常名。</textarea>
+            Enter                 
+            <select name="lang-select" id="langSel">
+                <option value="chinese">Chinese</option>
+                <option value="english">English</option>
+            </select>  below:
+            <textarea class="user-text" id="userText">道可道，非常道。名可名，非常名。</textarea>
             <div class="test">
                 <ruby>
                     <ruby>
@@ -43,13 +47,13 @@
             </div>
             <div class="settings">
                 <label for="pin-position">Pinyin caption position:</label>
-                <select name="pin-position" id="pinPos" onchange="changeRubyPos('pinyin', pinPos.value)">
+                <select name="pin-position" id="pinPos">
                     <option value="under">Under</option>
                     <option value="over">Over</option>
                 </select> 
                 <br>
                 <label for="zhu-position">Zhuyin caption position:</label>
-                <select name="zhu-position" id="zhuPos" onchange="changeRubyPos('zhuyin', zhuPos.value)">
+                <select name="zhu-position" id="zhuPos">
                     <option value="over">Left</option>
                     <option value="under">Right</option>
                 </select> 
